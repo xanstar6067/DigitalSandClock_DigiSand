@@ -18,7 +18,7 @@
  * when pressed, so it is configured as active-high with pulldown.
  * Change this to 1 if your exact board shorts PA0 to GND when pressed.
  */
-#define SAND_CLOCK_UKEY_ACTIVE_LOW      0
+#define SAND_CLOCK_UKEY_ACTIVE_LOW      1
 
 /*
  * MPU axis mapping. These values reproduce the AlexGyver sketch:
