@@ -10,6 +10,14 @@
 #define SAND_CLOCK_BUTTON_DEBOUNCE_MS   25U
 #define SAND_CLOCK_BUTTON_HOLD_MS       700U
 #define SAND_CLOCK_BUTTON_STEP_MS       250U
+#define SAND_CLOCK_SETTINGS_SAVE_DELAY_MS 2000U
+
+/*
+ * STM32F411CEU6 has 512 KB flash. Sector 7 is the last 128 KB sector:
+ * 0x08060000..0x0807FFFF. The current firmware is much smaller, so this sector
+ * is reserved for settings storage.
+ */
+#define SAND_CLOCK_SETTINGS_FLASH_ADDRESS 0x08060000UL
 
 #define SAND_CLOCK_LED_ACTIVE_LOW       1
 

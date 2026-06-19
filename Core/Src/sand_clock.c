@@ -9,6 +9,7 @@
 #include "max7219_matrix.h"
 #include "sand_clock_config.h"
 #include "sand_sim.h"
+#include "settings_storage.h"
 
 typedef struct {
     int16_t seconds;
@@ -29,9 +30,11 @@ static uint32_t fall_interval_ms = 1U;
 static uint32_t last_fall_ms = 0U;
 static uint32_t popup_until_ms = 0U;
 static uint32_t led_last_toggle_ms = 0U;
+static uint32_t settings_save_at_ms = 0U;
 static bool led_state = false;
 static bool sand_empty_flag = true;
 static bool both_buttons_latched = false;
+static bool settings_dirty = false;
 
 static bool time_expired(uint32_t now_ms, uint32_t target_ms) {
     return (int32_t)(now_ms - target_ms) >= 0;
@@ -58,6 +61,30 @@ static uint32_t calculate_fall_interval(void) {
         ((uint32_t)settings.seconds * 1000UL) /
         (uint32_t)SAND_CLOCK_PARTICLE_COUNT;
     return interval == 0U ? 1U : interval;
+}
+
+static void schedule_settings_save(void) {
+    settings_dirty = true;
+    settings_save_at_ms =
+        HAL_GetTick() + SAND_CLOCK_SETTINGS_SAVE_DELAY_MS;
+}
+
+static void update_settings_save(uint32_t now_ms) {
+    if (!settings_dirty || !time_expired(now_ms, settings_save_at_ms)) {
+        return;
+    }
+
+    SettingsStorageData stored = {
+        settings.seconds,
+        settings.brightness,
+    };
+
+    if (SettingsStorage_Save(&stored)) {
+        settings_dirty = false;
+    } else {
+        settings_save_at_ms =
+            now_ms + SAND_CLOCK_SETTINGS_SAVE_DELAY_MS;
+    }
 }
 
 static bool sand_bound(int8_t x, int8_t y) {
@@ -131,6 +158,7 @@ static void change_time(int16_t delta) {
     settings.seconds = (int16_t)next;
     fall_interval_ms = calculate_fall_interval();
     last_fall_ms = HAL_GetTick();
+    schedule_settings_save();
     show_time_popup();
 }
 
@@ -146,6 +174,7 @@ static void change_brightness(int8_t delta) {
 
     settings.brightness = (uint8_t)next;
     MAX7219_MatrixSetBrightness(settings.brightness);
+    schedule_settings_save();
 }
 
 static void update_buttons(uint32_t now_ms) {
@@ -255,7 +284,14 @@ static void update_sand_fall(uint32_t now_ms) {
 }
 
 void SandClock_Init(void) {
+    SettingsStorageData stored;
+
     board_led_set(false);
+
+    if (SettingsStorage_Load(&stored)) {
+        settings.seconds = stored.seconds;
+        settings.brightness = stored.brightness;
+    }
 
     MAX7219_MatrixInit();
     MAX7219_MatrixSetBrightness(settings.brightness);
@@ -287,6 +323,7 @@ void SandClock_Tick(void) {
 
     update_buttons(now_ms);
     update_led(now_ms);
+    update_settings_save(now_ms);
 
     if (popup_until_ms != 0U) {
         if (!time_expired(now_ms, popup_until_ms)) {
