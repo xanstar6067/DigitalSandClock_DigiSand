@@ -28,7 +28,7 @@
  * Flip signs or axes here if the sensor is mounted differently.
  */
 #define SAND_CLOCK_IMU_X_AXIS           1U
-#define SAND_CLOCK_IMU_X_SIGN           (-1)
+#define SAND_CLOCK_IMU_X_SIGN           (1)
 #define SAND_CLOCK_IMU_Y_AXIS           2U
 #define SAND_CLOCK_IMU_Y_SIGN           (1)
 #define SAND_CLOCK_IMU_Z_AXIS           0U
