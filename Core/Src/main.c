@@ -285,7 +285,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, UKEY_Pin|FLASH_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, MAX7219_CLK_Pin|MAX7219_CS_Pin|MAX7219_DIN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, MAX7219_CLK_Pin|MAX7219_CS_Pin|MAX7219_DIN_Pin|EXT_BTN1_Pin
+                          |EXT_BTN2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : ULED_Pin */
   GPIO_InitStruct.Pin = ULED_Pin;
@@ -312,6 +313,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = MAX7219_CLK_Pin|MAX7219_CS_Pin|MAX7219_DIN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : EXT_BTN1_Pin EXT_BTN2_Pin */
+  GPIO_InitStruct.Pin = EXT_BTN1_Pin|EXT_BTN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 

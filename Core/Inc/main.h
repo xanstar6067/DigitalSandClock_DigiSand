@@ -69,6 +69,10 @@ void Error_Handler(void);
 #define MAX7219_CS_GPIO_Port GPIOB
 #define MAX7219_DIN_Pin GPIO_PIN_5
 #define MAX7219_DIN_GPIO_Port GPIOB
+#define EXT_BTN1_Pin GPIO_PIN_8
+#define EXT_BTN1_GPIO_Port GPIOB
+#define EXT_BTN2_Pin GPIO_PIN_9
+#define EXT_BTN2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
