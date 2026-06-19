@@ -48,32 +48,57 @@ This repository contains my STM32 version, adapted for my own hardware build, wi
 | Кнопки           | 2 внешние кнопки                        |
 | Дополнительно    | Пьезодинамик / пищалка в будущей версии |
 
-## Подключение матриц MAX7219
+## Подключение
 
-Матрицы MAX7219 используют SPI-подобный интерфейс.
+### Матрицы MAX7219
 
-Типовое подключение:
+Две матрицы MAX7219 8x8 соединены последовательно.
 
-| MAX7219 | STM32                |
-| ------- | -------------------- |
-| VCC     | 5V                   |
-| GND     | GND                  |
-| DIN     | SPI MOSI             |
-| CLK     | SPI SCK              |
-| CS      | GPIO для выбора чипа |
+В этой версии проекта MAX7219 подключены не к аппаратному SPI, а к обычным GPIO
+STM32. Передача данных выполняется программно, по SPI-подобному интерфейсу.
+
+| Сигнал MAX7219 | Пин STM32 | Назначение    |
+| -------------- | --------- | ------------- |
+| CLK            | PB3       | `MAX7219_CLK` |
+| CS             | PB4       | `MAX7219_CS`  |
+| DIN            | PB5       | `MAX7219_DIN` |
+| VCC            | 5V        | Питание матриц |
+| GND            | GND       | Общая земля   |
 
 Матрицы соединяются последовательно:
 
 ```text
-STM32 SPI MOSI -> DIN первой MAX7219
-DOUT первой MAX7219 -> DIN второй MAX7219
+STM32 PB5 / MAX7219_DIN -> DIN первой матрицы
+DOUT первой матрицы       -> DIN второй матрицы
+CLK и CS                  -> общие для обеих матриц
 ```
 
-## Подключение кнопок
+### MPU6050
+
+Акселерометр MPU6050 подключен к шине `I2C1`.
+
+| Сигнал MPU6050 | Пин STM32 | Назначение |
+| -------------- | --------- | ---------- |
+| SCL            | PB6       | `I2C1_SCL` |
+| SDA            | PB7       | `I2C1_SDA` |
+| VCC            | 3.3V      | Питание модуля |
+| GND            | GND       | Общая земля |
+
+Для STM32 безопаснее питать модуль MPU6050 от `3.3V`. Некоторые платы MPU6050
+имеют собственный стабилизатор и могут принимать `5V`, но логика STM32 остается
+3.3-вольтовой.
+
+### Кнопки
 
 Внешние кнопки `EXT_BTN1` и `EXT_BTN2` работают как входы с внутренней подтяжкой STM32 к питанию.
 
 Внешние резисторы не нужны.
+
+| Кнопка   | Пин STM32 | Назначение                  |
+| -------- | --------- | --------------------------- |
+| EXT_BTN1 | PB8       | Первая внешняя кнопка       |
+| EXT_BTN2 | PB9       | Вторая внешняя кнопка       |
+| UKEY     | PA0       | Встроенная сервисная кнопка |
 
 Подключение:
 
@@ -87,6 +112,19 @@ GND ---- кнопка ---- PB9  EXT_BTN2
 Прошивка ожидает, что при нажатии кнопка замыкает входной пин на землю.
 
 Встроенная кнопка `UKEY` используется как сервисная / тестовая кнопка.
+
+### Встроенный светодиод
+
+| Сигнал | Пин STM32 | Назначение                  |
+| ------ | --------- | --------------------------- |
+| ULED   | PC13      | Индикация состояния MPU6050 |
+
+### Служебные интерфейсы
+
+| Интерфейс | Пины STM32  | Назначение                              |
+| --------- | ----------- | --------------------------------------- |
+| SWD       | PA13 / PA14 | Прошивка и отладка                      |
+| USART1    | PA9 / PA10  | Последовательный порт, если понадобится |
 
 ## Управление
 
@@ -244,32 +282,57 @@ Main components:
 | Buttons            | 2 external buttons                               |
 | Optional           | Piezo buzzer / small speaker in a future version |
 
-## MAX7219 display connection
+## Connections
 
-The MAX7219 modules use a SPI-like interface.
+### MAX7219 display connection
 
-Typical connection:
+Two MAX7219 8x8 matrix modules are connected in a chain.
 
-| MAX7219 | STM32            |
-| ------- | ---------------- |
-| VCC     | 5V               |
-| GND     | GND              |
-| DIN     | SPI MOSI         |
-| CLK     | SPI SCK          |
-| CS      | GPIO chip select |
+In this project the MAX7219 modules are not connected to the hardware SPI
+peripheral. They use ordinary STM32 GPIO pins, and the SPI-like protocol is
+implemented in firmware.
+
+| MAX7219 signal | STM32 pin | Function      |
+| -------------- | --------- | ------------- |
+| CLK            | PB3       | `MAX7219_CLK` |
+| CS             | PB4       | `MAX7219_CS`  |
+| DIN            | PB5       | `MAX7219_DIN` |
+| VCC            | 5V        | Matrix power  |
+| GND            | GND       | Common ground |
 
 The two matrix modules are connected in a chain:
 
 ```text
-STM32 SPI MOSI -> DIN of the first MAX7219
-DOUT of the first MAX7219 -> DIN of the second MAX7219
+STM32 PB5 / MAX7219_DIN -> DIN of the first matrix
+DOUT of the first matrix -> DIN of the second matrix
+CLK and CS               -> shared by both matrices
 ```
 
-## Buttons
+### MPU6050
+
+The MPU6050 accelerometer is connected to the `I2C1` bus.
+
+| MPU6050 signal | STM32 pin | Function     |
+| -------------- | --------- | ------------ |
+| SCL            | PB6       | `I2C1_SCL`   |
+| SDA            | PB7       | `I2C1_SDA`   |
+| VCC            | 3.3V      | Module power |
+| GND            | GND       | Common ground |
+
+Using `3.3V` power is the safer option with STM32. Some MPU6050 breakout boards
+include a regulator and may accept `5V`, but STM32 logic is still 3.3 V.
+
+### Buttons
 
 External buttons `EXT_BTN1` and `EXT_BTN2` are configured as active-low inputs with internal STM32 pull-up resistors.
 
 External resistors are not required.
+
+| Button   | STM32 pin | Function                 |
+| -------- | --------- | ------------------------ |
+| EXT_BTN1 | PB8       | First external button    |
+| EXT_BTN2 | PB9       | Second external button   |
+| UKEY     | PA0       | Onboard service button   |
 
 Connection:
 
@@ -283,6 +346,19 @@ Do not connect these buttons to `3.3V`.
 The firmware expects a pressed button to short the input pin to ground.
 
 The onboard `UKEY` button is used as a service / test button.
+
+### Onboard LED
+
+| Signal | STM32 pin | Function                  |
+| ------ | --------- | ------------------------- |
+| ULED   | PC13      | MPU6050 status indication |
+
+### Service interfaces
+
+| Interface | STM32 pins  | Function                  |
+| --------- | ----------- | ------------------------- |
+| SWD       | PA13 / PA14 | Programming and debugging |
+| USART1    | PA9 / PA10  | Serial port, if needed    |
 
 ## Controls
 
@@ -401,4 +477,3 @@ Original project:
   https://github.com/AlexGyver/DigiSand
 
 This repository contains my STM32 adaptation of the project.
-
